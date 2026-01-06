@@ -222,6 +222,3 @@
 2.58.104.1 m1.ppy.sh
 2.58.104.1 m2.ppy.sh
 2.58.104.1 m3.ppy.sh
-2.58.104.1 assets.ppy.sh
-2.58.104.1 spectator.ppy.sh
-2.58.104.1 a.ppy.sh
