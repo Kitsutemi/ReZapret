@@ -421,6 +421,7 @@ akamaihd.net
 akamaized.net
 lancache.steamcontent.com
 lzt.market
+lolz.live
 riotgames.com
 riotcdn.net
 pvp.net
@@ -438,3 +439,4 @@ valorant.riotgames.com
 auth.riotgames.com
 clientconfig.rpg.riotgames.com
 akacdn.riotgames.com
+steamcloud-dub.s3.dualstack.eu-west-1.amazonaws.com
