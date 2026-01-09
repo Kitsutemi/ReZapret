@@ -439,6 +439,7 @@ valorant.riotgames.com
 auth.riotgames.com
 clientconfig.rpg.riotgames.com
 akacdn.riotgames.com
+<<<<<<< HEAD
 steamcloudams2.blob.core.windows.net
 shared.akamai.steamstatic.com
 avatars.akamai.steamstatic.com
@@ -481,3 +482,6 @@ steamstore-a.akamaihd.net
 steamusercontent-a.akamaihd.net
 steamuserimages-a.akamaihd.net
 steamvideo-a.akamaihd.net
+=======
+steamcloud-dub.s3.dualstack.eu-west-1.amazonaws.com
+>>>>>>> a9dc860c2603232d11630366b23c9c790f70f6dc
