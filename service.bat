@@ -1,5 +1,5 @@
 @echo off
-set "LOCAL_VERSION=2.3.1"
+set "LOCAL_VERSION=2.3.2"
 
 :: External commands
 if "%~1"=="status_zapret" (
@@ -323,7 +323,7 @@ cls
 :: Set current version and URLs
 set "GITHUB_VERSION_URL=https://raw.githubusercontent.com/Kitsutemi/ReZapret/refs/heads/main/.service/version.txt"
 set "GITHUB_RELEASE_URL=https://github.com/Kitsutemi/ReZapret/releases/tag/"
-set "GITHUB_DOWNLOAD_URL=https://github.com/Kitsutemi/ReZapret/releases/download/latest/ReZapret-"
+set "GITHUB_DOWNLOAD_URL=https://github.com/Kitsutemi/ReZapret/releases/download/latest/"
 
 :: Get the latest version from GitHub
 for /f "delims=" %%A in ('powershell -command "(Invoke-WebRequest -Uri \"%GITHUB_VERSION_URL%\" -Headers @{\"Cache-Control\"=\"no-cache\"} -UseBasicParsing -TimeoutSec 5).Content.Trim()" 2^>nul') do set "GITHUB_VERSION=%%A"
