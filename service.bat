@@ -1,5 +1,5 @@
 @echo off
-set "LOCAL_VERSION=2.1.0"
+set "LOCAL_VERSION=2.2.0"
 
 :: External commands
 if "%~1"=="status_zapret" (
@@ -355,7 +355,7 @@ if /i "%CHOICE%"=="y" set "CHOICE=Y"
 
 if /i "%CHOICE%"=="Y" (
     echo Opening the download page...
-    start "" "%GITHUB_DOWNLOAD_URL%%GITHUB_VERSION%.rar"
+    start "" "%GITHUB_DOWNLOAD_URL%%GITHUB_VERSION%.zip"
 )
 
 
