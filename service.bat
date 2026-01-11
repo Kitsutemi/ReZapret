@@ -321,7 +321,7 @@ chcp 437 > nul
 cls
 
 :: Set current version and URLs
-set "GITHUB_VERSION_URL=https://raw.githubusercontent.com/Kitsutemi/ReZapret/refs/heads/main/.service/version.txt"
+set "GITHUB_VERSION_URL=https://raw.githubusercontent.com/Kitsutemi/ReZapret/main/.service/version.txt"
 set "GITHUB_RELEASE_URL=https://github.com/Kitsutemi/ReZapret/releases/tag/"
 set "GITHUB_DOWNLOAD_URL=https://github.com/Kitsutemi/ReZapret/releases/download/latest/ReZapret-"
 
