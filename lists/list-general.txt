@@ -44,6 +44,7 @@ ffzap.com
 betterttv.net
 7tv.app
 7tv.io
+localizeapi.com
 api.majestic-files.net
 api.majestic-files.com
 case-battle.store
