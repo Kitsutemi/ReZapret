@@ -542,3 +542,4 @@ collections.mp.microsoft.com
 oneocsp.microsoft.com
 gfwsl.geforce.com
 store-images.s-microsoft.com
+lichess.org
