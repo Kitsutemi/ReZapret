@@ -492,7 +492,6 @@ s.team
 steam.tv
 steam-api.com
 steam-chat.com
-steamcommunity.com
 steamcontent.com
 steamdeck.com
 steamgames.com
@@ -575,3 +574,14 @@ shared.steamstatic.com
 clientconfig.akamai.steamstatic.com
 firstmail.ltd
 vsthemes.s3.regru.cloud
+replay184.valve.net
+hed.aulacn.com
+medvestnik.ru
+elibrary.ru
+secure.xsolla.com
+www.zaymer.ru
+hub.atk.pro
+desktop.atkgear.com
+api.vxe.com
+cdnwidget.judge.me
+cdn.atk.pro
