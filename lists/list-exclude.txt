@@ -602,3 +602,9 @@ stat.dominion.ru.net
 beyond.hg-cdn.com
 game-config.gryphline.com
 launcher.gryphline.com
+max.ru
+web.max.ru
+platform-api.max.ru
+dev.max.ru
+st.max.ru
+download.max.ru
