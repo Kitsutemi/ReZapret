@@ -608,3 +608,14 @@ platform-api.max.ru
 dev.max.ru
 st.max.ru
 download.max.ru
+download.steaminventoryhelper.com
+api.steampowered.com
+yoomoney.ru
+mail.rambler.ru
+static.rambler.ru
+id.rambler.ru
+cdnorg.d.miui.com
+bn.d.miui.com
+ozon.ru
+www.banki.ru
+esia.gosuslugi.ru
