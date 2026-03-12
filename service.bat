@@ -9,6 +9,8 @@ if "%~1"=="status_zapret" (
 )
 
 if "%~1"=="check_updates" (
+    if defined NO_UPDATE_CHECK exit /b
+
     if exist "%~dp0utils\check_updates.enabled" (
         if not "%~2"=="soft" (
             start /b service check_updates soft
@@ -25,11 +27,18 @@ if "%~1"=="load_game_filter" (
     exit /b
 )
 
+if "%~1"=="load_user_lists" (
+    call :load_user_lists
+    exit /b
+)
+
 if "%1"=="admin" (
     call :check_command chcp
     call :check_command find
     call :check_command findstr
     call :check_command netsh
+    
+    call :load_user_lists
 
     echo Started with admin rights
 ) else (
@@ -37,7 +46,7 @@ if "%1"=="admin" (
     call :check_command powershell
 
     echo Requesting admin rights...
-    powershell -Command "Start-Process 'cmd.exe' -ArgumentList '/c \"\"%~f0\" admin\"' -Verb RunAs"
+    powershell -NoProfile -Command "Start-Process 'cmd.exe' -ArgumentList '/c \"\"%~f0\" admin\"' -Verb RunAs"
     exit
 )
 
@@ -51,8 +60,9 @@ call :game_switch_status
 call :check_updates_switch_status
 
 set "menu_choice=null"
+
 echo.
-echo   REZAPRET SERVICE MANAGER (Version: !LOCAL_VERSION!)
+echo   REZAPRET SERVICE MANAGER v!LOCAL_VERSION!
 echo   ----------------------------------------
 echo.
 echo   :: SERVICE
@@ -77,7 +87,8 @@ echo.
 echo   ----------------------------------------
 echo      0. Exit
 echo.
-set /p menu_choice=Enter choice (0-11): 
+
+set /p menu_choice=   Select option (0-11): 
 
 if "%menu_choice%"=="1" goto service_install
 if "%menu_choice%"=="2" goto service_remove
@@ -85,13 +96,30 @@ if "%menu_choice%"=="3" goto service_status
 if "%menu_choice%"=="4" goto game_switch
 if "%menu_choice%"=="5" goto ipset_switch
 if "%menu_choice%"=="6" goto check_updates_switch
-if "%menu_choice%"=="7" goto game_switch
-if "%menu_choice%"=="8" goto ipset_update
+if "%menu_choice%"=="7" goto ipset_update
+if "%menu_choice%"=="8" goto hosts_update
 if "%menu_choice%"=="9" goto service_check_updates
 if "%menu_choice%"=="10" goto service_diagnostics
 if "%menu_choice%"=="11" goto run_tests
 if "%menu_choice%"=="0" exit /b
 goto menu
+
+
+:: LOAD USER LISTS =====================
+:load_user_lists
+set "LISTS_PATH=%~dp0lists\"
+
+if not exist "%LISTS_PATH%ipset-exclude-user.txt" (
+    echo 203.0.113.113/32>"%LISTS_PATH%ipset-exclude-user.txt"
+)
+if not exist "%LISTS_PATH%list-general-user.txt" (
+    echo domain.example.abc>"%LISTS_PATH%list-general-user.txt"
+)
+if not exist "%LISTS_PATH%list-exclude-user.txt" (
+    echo domain.example.abc>"%LISTS_PATH%list-exclude-user.txt"
+)
+
+exit /b
 
 
 :: TCP ENABLE ==========================
@@ -191,7 +219,7 @@ goto menu
 :: INSTALL =============================
 :service_install
 cls
-chcp 65001 > nul
+chcp 437 > nul
 
 :: Main
 cd /d "%~dp0"
@@ -201,13 +229,10 @@ set "LISTS_PATH=%~dp0lists\"
 :: Searching for .bat files in current folder, except files that start with "service"
 echo Pick one of the options:
 set "count=0"
-for %%f in (*.bat) do (
-    set "filename=%%~nxf"
-    if /i not "!filename:~0,7!"=="service" (
-        set /a count+=1
-        echo !count!. %%f
-        set "file!count!=%%f"
-    )
+for /f "delims=" %%F in ('powershell -NoProfile -Command "Get-ChildItem -LiteralPath '.' -Filter '*.bat' | Where-Object { $_.Name -notlike 'service*' } | Sort-Object { [Regex]::Replace($_.Name, '(\d+)', { $args[0].Value.PadLeft(8, '0') }) } | ForEach-Object { $_.Name }"') do (
+    set /a count+=1
+    echo !count!. %%F
+    set "file!count!=%%F"
 )
 
 :: Choosing file
@@ -275,6 +300,10 @@ for /f "tokens=*" %%a in ('type "!selectedFile!"') do (
                     )
                 ) else if "!arg:~0,12!" EQU "%%GameFilter%%" (
                     set "arg=%GameFilter%"
+                ) else if "!arg:~0,15!" EQU "%%GameFilterTCP%%" (
+                    set "arg=%GameFilterTCP%"
+                ) else if "!arg:~0,15!" EQU "%%GameFilterUDP%%" (
+                    set "arg=%GameFilterUDP%"
                 )
 
                 if !mergeargs!==1 (
@@ -334,12 +363,12 @@ chcp 437 > nul
 cls
 
 :: Set current version and URLs
-set "GITHUB_VERSION_URL=https://raw.githubusercontent.com/Kitsutemi/ReZapret/main/.service/version.txt"
+set "GITHUB_VERSION_URL=https://raw.githubusercontent.com/Kitsutemi/ReZapret/refs/heads/main/.service/version.txt"
 set "GITHUB_RELEASE_URL=https://github.com/Kitsutemi/ReZapret/releases/tag/"
-set "GITHUB_DOWNLOAD_URL=https://github.com/Kitsutemi/ReZapret/releases/download/latest/ReZapret-"
+set "GITHUB_DOWNLOAD_URL=https://github.com/Kitsutemi/ReZapret/releases/latest"
 
 :: Get the latest version from GitHub
-for /f "delims=" %%A in ('powershell -command "(Invoke-WebRequest -Uri \"%GITHUB_VERSION_URL%\" -Headers @{\"Cache-Control\"=\"no-cache\"} -UseBasicParsing -TimeoutSec 5).Content.Trim()" 2^>nul') do set "GITHUB_VERSION=%%A"
+for /f "delims=" %%A in ('powershell -NoProfile -Command "(Invoke-WebRequest -Uri \"%GITHUB_VERSION_URL%\" -Headers @{\"Cache-Control\"=\"no-cache\"} -UseBasicParsing -TimeoutSec 5).Content.Trim()" 2^>nul') do set "GITHUB_VERSION=%%A"
 
 :: Error handling
 if not defined GITHUB_VERSION (
@@ -361,15 +390,8 @@ if "%LOCAL_VERSION%"=="%GITHUB_VERSION%" (
 echo New version available: %GITHUB_VERSION%
 echo Release page: %GITHUB_RELEASE_URL%%GITHUB_VERSION%
 
-set "CHOICE="
-set /p "CHOICE=Do you want to automatically download the new version? (Y/N) (default: Y) "
-if "%CHOICE%"=="" set "CHOICE=Y"
-if /i "%CHOICE%"=="y" set "CHOICE=Y"
-
-if /i "%CHOICE%"=="Y" (
-    echo Opening the download page...
-    start "" "%GITHUB_DOWNLOAD_URL%%GITHUB_VERSION%.zip"
-)
+echo Opening the download page...
+start "" "%GITHUB_DOWNLOAD_URL%"
 
 
 if "%1"=="soft" exit 
@@ -411,16 +433,6 @@ if !proxyEnabled!==1 (
     call :PrintGreen "Proxy check passed"
 )
 echo:
-
-:: Check netsh
-where netsh >nul 2>nul
-if !errorlevel! neq 0  (
-    call :PrintRed "[X] netsh command not found, check your PATH variable"
-	echo PATH = "%PATH%"
-	echo:
-	pause
-	goto menu
-)
 
 :: TCP timestamps check
 netsh interface tcp show global | findstr /i "timestamps" | findstr /i "enabled" > nul
@@ -501,8 +513,8 @@ echo:
 set "BIN_PATH=%~dp0bin\"
 if not exist "%BIN_PATH%\*.sys" (
     call :PrintRed "WinDivert64.sys file NOT found."
+    echo:
 )
-echo:
 
 :: VPN
 set "VPN_SERVICES="
@@ -524,7 +536,7 @@ echo:
 
 :: DNS
 set "dohfound=0"
-for /f "delims=" %%a in ('powershell -Command "Get-ChildItem -Recurse -Path 'HKLM:System\CurrentControlSet\Services\Dnscache\InterfaceSpecificParameters\' | Get-ItemProperty | Where-Object { $_.DohFlags -gt 0 } | Measure-Object | Select-Object -ExpandProperty Count"') do (
+for /f "delims=" %%a in ('powershell -NoProfile -Command "Get-ChildItem -Recurse -Path 'HKLM:System\CurrentControlSet\Services\Dnscache\InterfaceSpecificParameters\' | Get-ItemProperty | Where-Object { $_.DohFlags -gt 0 } | Measure-Object | Select-Object -ExpandProperty Count"') do (
     if %%a gtr 0 (
         set "dohfound=1"
     )
@@ -536,6 +548,17 @@ if !dohfound!==0 (
     call :PrintGreen "Secure DNS check passed"
 )
 echo:
+
+:: Hosts file check
+set "hostsFile=%SystemRoot%\System32\drivers\etc\hosts"
+if exist "%hostsFile%" (
+    set "yt_found=0"
+    >nul 2>&1 findstr /I "youtube.com" "%hostsFile%" && set "yt_found=1"
+    >nul 2>&1 findstr /I "yotou.be" "%hostsFile%" && set "yt_found=1"
+    if !yt_found!==1 (
+        call :PrintYellow "[?] Your hosts file contains entries for youtube.com or yotou.be. This may cause problems with YouTube access"
+    )
+)
 
 :: WinDivert conflict
 tasklist /FI "IMAGENAME eq winws.exe" | find /I "winws.exe" > nul
@@ -684,12 +707,34 @@ chcp 437 > nul
 
 set "gameFlagFile=%~dp0utils\game_filter.enabled"
 
-if exist "%gameFlagFile%" (
-    set "GameFilterStatus=enabled"
-    set "GameFilter=1024-65535"
-) else (
+if not exist "%gameFlagFile%" (
     set "GameFilterStatus=disabled"
     set "GameFilter=12"
+    set "GameFilterTCP=12"
+    set "GameFilterUDP=12"
+    exit /b
+)
+
+set "GameFilterMode="
+for /f "usebackq delims=" %%A in ("%gameFlagFile%") do (
+    if not defined GameFilterMode set "GameFilterMode=%%A"
+)
+
+if /i "%GameFilterMode%"=="all" (
+    set "GameFilterStatus=enabled (TCP and UDP)"
+    set "GameFilter=1024-65535"
+    set "GameFilterTCP=1024-65535"
+    set "GameFilterUDP=1024-65535"
+) else if /i "%GameFilterMode%"=="tcp" (
+    set "GameFilterStatus=enabled (TCP)"
+    set "GameFilter=1024-65535"
+    set "GameFilterTCP=1024-65535"
+    set "GameFilterUDP=12"
+) else (
+    set "GameFilterStatus=enabled (UDP)"
+    set "GameFilter=1024-65535"
+    set "GameFilterTCP=12"
+    set "GameFilterUDP=1024-65535"
 )
 exit /b
 
@@ -698,16 +743,35 @@ exit /b
 chcp 437 > nul
 cls
 
-if not exist "%gameFlagFile%" (
-    echo Enabling game filter...
-    echo ENABLED > "%gameFlagFile%"
-    call :PrintYellow "Restart the zapret to apply the changes"
+echo Select game filter mode:
+echo   0. Disable
+echo   1. TCP and UDP
+echo   2. TCP only
+echo   3. UDP only
+echo.
+set "GameFilterChoice=0"
+set /p "GameFilterChoice=Select option (0-3, default: 0): "
+if %GameFilterChoice%=="" set "GameFilterChoice=0"
+
+if "%GameFilterChoice%"=="0" (
+    if exist "%gameFlagFile%" (
+        del /f /q "%gameFlagFile%"
+    ) else (
+        goto menu
+    )
+) else if "%GameFilterChoice%"=="1" (
+    echo all>"%gameFlagFile%"
+) else if "%GameFilterChoice%"=="2" (
+    echo tcp>"%gameFlagFile%"
+) else if "%GameFilterChoice%"=="3" (
+    echo udp>"%gameFlagFile%"
 ) else (
-    echo Disabling game filter...
-    del /f /q "%gameFlagFile%"
-    call :PrintYellow "Restart the zapret to apply the changes"
+    echo Invalid choice, exiting...
+    pause
+    goto menu
 )
 
+call :PrintYellow "Restart the zapret to apply the changes"
 pause
 goto menu
 
@@ -821,7 +885,7 @@ echo Updating ipset-all...
 if exist "%SystemRoot%\System32\curl.exe" (
     curl -L -o "%listFile%" "%url%"
 ) else (
-    powershell -Command ^
+    powershell -NoProfile -Command ^
         "$url = '%url%';" ^
         "$out = '%listFile%';" ^
         "$dir = Split-Path -Parent $out;" ^
@@ -851,7 +915,7 @@ echo Checking hosts file...
 if exist "%SystemRoot%\System32\curl.exe" (
     curl -L -s -o "%tempFile%" "%hostsUrl%"
 ) else (
-    powershell -Command ^
+    powershell -NoProfile -Command ^
         "$url = '%hostsUrl%';" ^
         "$out = '%tempFile%';" ^
         "$res = Invoke-WebRequest -Uri $url -TimeoutSec 10 -UseBasicParsing;" ^
@@ -860,6 +924,7 @@ if exist "%SystemRoot%\System32\curl.exe" (
 
 if not exist "%tempFile%" (
     call :PrintRed "Failed to download hosts file from repository"
+    call :PrintYellow "Copy hosts file manually from %hostsUrl%"
     pause
     goto menu
 )
@@ -904,7 +969,7 @@ goto menu
 
 :: RUN TESTS =============================
 :run_tests
-chcp 65001 >nul
+chcp 437 >nul
 cls
 
 :: Require PowerShell 3.0+
@@ -927,15 +992,15 @@ goto menu
 :: Utility functions
 
 :PrintGreen
-powershell -Command "Write-Host \"%~1\" -ForegroundColor Green"
+powershell -NoProfile -Command "Write-Host \"%~1\" -ForegroundColor Green"
 exit /b
 
 :PrintRed
-powershell -Command "Write-Host \"%~1\" -ForegroundColor Red"
+powershell -NoProfile -Command "Write-Host \"%~1\" -ForegroundColor Red"
 exit /b
 
 :PrintYellow
-powershell -Command "Write-Host \"%~1\" -ForegroundColor Yellow"
+powershell -NoProfile -Command "Write-Host \"%~1\" -ForegroundColor Yellow"
 exit /b
 
 :check_command
