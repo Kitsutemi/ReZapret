@@ -176,3 +176,5 @@ gamelift-ping.ap-southeast-2.api.aws
 gamelift-ping.eu-west-1.api.aws
 gamelift-ping.ap-southeast-1.api.aws
 edge.forgecdn.net
+discord-tracker.com
+v4.hentai-hub.net
